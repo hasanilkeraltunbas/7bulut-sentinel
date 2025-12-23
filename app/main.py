@@ -1,14 +1,17 @@
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from .database import engine, Base, get_db, SessionLocal  # SessionLocal eklendi
+from .database import engine, Base, get_db, SessionLocal
 from .models import MonitorLog
 from .monitor import perform_check
 import aiocron
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+import secrets
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 # Veritabanı tablolarını oluştur
 Base.metadata.create_all(bind=engine)
@@ -18,6 +21,26 @@ app = FastAPI(title="7Bulut Sentinel")
 # Static files ve templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+# security basic auth
+
+security = HTTPBasic()
+
+# Kullanıcı adı ve şifre (istediğin gibi değiştir)
+ADMIN_USER = "admin"
+ADMIN_PASS = "7bulut123"
+
+def get_current_user(credentials: HTTPBasicCredentials = Depends(security)):
+    correct_username = secrets.compare_digest(credentials.username, ADMIN_USER)
+    correct_password = secrets.compare_digest(credentials.password, ADMIN_PASS)
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Hatalı kullanıcı adı veya şifre",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -143,8 +166,8 @@ def calculate_stats(db: Session):
             'hourly_data': []
         }
 
-@app.get("/")
-async def read_root(request: Request, db: Session = Depends(get_db)):
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
     try:
         # En son kayıt
         last_log = db.query(MonitorLog).order_by(MonitorLog.id.desc()).first()
@@ -155,9 +178,8 @@ async def read_root(request: Request, db: Session = Depends(get_db)):
         # İstatistikler
         stats = calculate_stats(db)
         
-        # Varsayılan değerler - DÜZELTME: timestamp eklendi
+        # Varsayılan değerler
         if not last_log:
-            # Fake object oluştur
             class FakeLog:
                 def __init__(self):
                     self.is_online = False
@@ -172,7 +194,8 @@ async def read_root(request: Request, db: Session = Depends(get_db)):
             "request": request, 
             "data": last_log,
             "history": history,
-            "stats": stats
+            "stats": stats,
+            "user": user  # Kullanıcı bilgisini template'e gönder
         })
         
     except Exception as e:
@@ -197,5 +220,6 @@ async def read_root(request: Request, db: Session = Depends(get_db)):
                 'zeytin_uptime': 0.0,
                 'total_checks_24h': 0,
                 'hourly_data': []
-            }
+            },
+            "user": user
         })

@@ -15,3 +15,4 @@ class MonitorLog(Base):
     response_time = Column(Float)
     zeytin_status = Column(Boolean)
     status_code = Column(Integer)
+    ssl_days = Column(Integer, nullable=True) # SSL kalan gün sayısını burada tutacağız
