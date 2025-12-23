@@ -154,25 +154,31 @@ services:
 
 ## 📱 Telegram Bot Kurulumu
 
+## 📱 Telegram & Güvenlik Konfigürasyonu
+
+Bu proje hassas verileri (Token, Şifreler) yönetmek için **Environment Variables (Çevre Değişkenleri)** kullanır.
+
 ### 1. Bot Oluşturma
 1. Telegram'da [@BotFather](https://t.me/botfather)'a mesaj atın
-2. `/newbot` komutunu gönderin
-3. Bot adını ve kullanıcı adını belirleyin
-4. Aldığınız **Bot Token**'ı kaydedin
+2. `/newbot` komutunu gönderin ve adımları takip edin
+3. Size verilen **HTTP API Token**'ı güvenli bir yere not edin
 
 ### 2. Chat ID Bulma
-1. Bot'unuzla konuşmaya başlayın (`/start`)
-2. Bu URL'yi browser'da açın:
-```
-https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates
-```
-3. JSON'da `"chat":{"id":XXXXXXX}` değerini bulun
+1. Oluşturduğunuz botu başlatın (`/start`)
+2. Tarayıcıda şu adrese gidin: `https://api.telegram.org/bot<TOKEN_YAZIN>/getUpdates`
+3. JSON çıktısında `"chat":{"id":123456789}` kısmındaki ID numarasını alın
 
-### 3. .env Dosyasını Güncelleyin
+### 3. Değişkenleri Tanımlama
+
+⚠️ **ÖNEMLİ:** `.env` dosyasını veya tokenlarınızı asla GitHub'a yüklemeyin!
+
+#### A. Local Çalışma (Geliştirme Ortamı)
+Proje ana dizininde `.env` adında bir dosya oluşturun ve bilgilerinizi girin:
+
 ```bash
-TELEGRAM_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
-TELEGRAM_CHAT_ID=987654321
-```
+# .env dosyası örneği
+TELEGRAM_TOKEN=123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
+TELEGRAM_CHAT_ID=123456789
 
 ## 🧪 Test Etme
 
@@ -321,9 +327,8 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için `LICENSE` dosy
 - **SSL kontrolü çalışmıyor**: İnternet bağlantısını ve firewall ayarlarını kontrol edin
 
 ### İletişim
-- 📧 **E-posta**: [destek@7bulut.com](mailto:destek@7bulut.com)
+- 📧 **E-posta**: [info@7bulut.com](mailto:info@7bulut.com)
 - 🌐 **Website**: [www.7bulut.com](https://www.7bulut.com)
-- 📱 **Telegram**: [@7bulut_destek](https://t.me/7bulut_destek)
 
 ---
 
