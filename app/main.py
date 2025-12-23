@@ -22,11 +22,8 @@ app = FastAPI(title="7Bulut Sentinel")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# security basic auth
-
+# --- GÜVENLİK AYARLARI ---
 security = HTTPBasic()
-
-# Kullanıcı adı ve şifre (istediğin gibi değiştir)
 ADMIN_USER = "admin"
 ADMIN_PASS = "7bulut123"
 
@@ -41,7 +38,7 @@ def get_current_user(credentials: HTTPBasicCredentials = Depends(security)):
         )
     return credentials.username
 
-
+# --- BAŞLANGIÇ İŞLEMLERİ ---
 @app.on_event("startup")
 async def startup_event():
     print("🚀 7Bulut Sentinel başlatılıyor...")
@@ -51,13 +48,13 @@ async def startup_event():
     async def periodic_check():
         await perform_check()
     
-    # Her gece saat 03:00'te eski kayıtları temizle (isteğe bağlı)
+    # Her gece saat 03:00'te eski kayıtları temizle
     @aiocron.crontab('0 3 * * *') 
     async def cleanup_old_logs():
         db = SessionLocal()
         try:
-            # 7 gün öncesini hesapla (24 saat çok kısa)
-            threshold = datetime.utcnow() - timedelta(days=7)
+            # 7 gün öncesini hesapla
+            threshold = datetime.now(timezone.utc) - timedelta(days=7)
             
             # Eski kayıtları sil
             deleted_count = db.query(MonitorLog).filter(
@@ -76,6 +73,7 @@ async def startup_event():
     
     print("✅ Monitoring sistemi aktif!")
 
+# --- YARDIMCI FONKSİYONLAR ---
 def safe_float(value, default=0.0):
     """Güvenli float dönüşümü"""
     if value is None:
@@ -84,29 +82,32 @@ def safe_float(value, default=0.0):
         return float(value)
     return float(value)
 
-
 def calculate_stats(db: Session):
+    """İstatistikleri hesapla"""
     TR_TIME = timezone(timedelta(hours=3))
-    """İstatistikleri hesapla - Güvenli versiyon"""
     try:
         now = datetime.now(TR_TIME)
-        last_24h = now - timedelta(hours=24)
-        last_1h = now - timedelta(hours=1)
+        # Veritabanındaki UTC zamanlarıyla uyumlu olması için UTC kullanıyoruz
+        now_utc = datetime.now(timezone.utc)
         
-        # Güvenli ortalama hesaplama
+        last_24h = now_utc - timedelta(hours=24)
+        last_1h = now_utc - timedelta(hours=1)
+        
+        # 24 Saatlik Ortalama Yanıt Süresi
         avg_24h_raw = db.query(func.avg(MonitorLog.response_time)).filter(
             MonitorLog.timestamp >= last_24h,
             MonitorLog.is_online == True
         ).scalar()
         avg_24h = round(safe_float(avg_24h_raw), 2)
         
+        # 1 Saatlik Ortalama Yanıt Süresi
         avg_1h_raw = db.query(func.avg(MonitorLog.response_time)).filter(
             MonitorLog.timestamp >= last_1h,
             MonitorLog.is_online == True
         ).scalar()
         avg_1h = round(safe_float(avg_1h_raw), 2)
         
-        # Uptime hesaplama
+        # Uptime (Erişilebilirlik)
         total_checks_24h = db.query(MonitorLog).filter(
             MonitorLog.timestamp >= last_24h
         ).count()
@@ -118,7 +119,7 @@ def calculate_stats(db: Session):
         
         uptime_percentage = round((online_checks_24h / total_checks_24h * 100), 2) if total_checks_24h > 0 else 0
         
-        # Zeytin AI uptime
+        # Zeytin AI Uptime
         zeytin_online_24h = db.query(MonitorLog).filter(
             MonitorLog.timestamp >= last_24h,
             MonitorLog.zeytin_status == True
@@ -126,11 +127,11 @@ def calculate_stats(db: Session):
         
         zeytin_uptime = round((zeytin_online_24h / total_checks_24h * 100), 2) if total_checks_24h > 0 else 0
         
-        # Saatlik veriler
+        # Saatlik Grafik Verileri
         hourly_data = []
         for i in range(24):
-            hour_start = now - timedelta(hours=i+1)
-            hour_end = now - timedelta(hours=i)
+            hour_start = now_utc - timedelta(hours=i+1)
+            hour_end = now_utc - timedelta(hours=i)
             
             hour_avg_raw = db.query(func.avg(MonitorLog.response_time)).filter(
                 MonitorLog.timestamp >= hour_start,
@@ -140,8 +141,11 @@ def calculate_stats(db: Session):
             
             hour_avg = round(safe_float(hour_avg_raw), 2)
             
+            # Grafikte Türkiye saatiyle göstermek için +3 ekliyoruz
+            display_hour = (now + timedelta(hours=-i)).strftime('%H:00')
+            
             hourly_data.append({
-                'hour': hour_start.strftime('%H:00'),
+                'hour': display_hour,
                 'avg_response': hour_avg
             })
         
@@ -156,7 +160,6 @@ def calculate_stats(db: Session):
         
     except Exception as e:
         print(f"Stats calculation error: {e}")
-        # Hata durumunda güvenli varsayılan değerler
         return {
             'avg_24h': 0.0,
             'avg_1h': 0.0,
@@ -166,27 +169,30 @@ def calculate_stats(db: Session):
             'hourly_data': []
         }
 
+# --- DASHBOARD ROTASI ---
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
     try:
         # En son kayıt
         last_log = db.query(MonitorLog).order_by(MonitorLog.id.desc()).first()
         
-        # Son 20 kayıt
-        history = db.query(MonitorLog).order_by(MonitorLog.id.desc()).limit(20).all()
+        # --- KRİTİK KISIM: LİMİT ---
+        # Sayfanın uzamasını engellemek için sadece son 50 kaydı çekiyoruz.
+        history = db.query(MonitorLog).order_by(MonitorLog.id.desc()).limit(50).all()
         
         # İstatistikler
         stats = calculate_stats(db)
         
-        # Varsayılan değerler
+        # Eğer hiç log yoksa fake data oluştur
         if not last_log:
             class FakeLog:
                 def __init__(self):
                     self.is_online = False
                     self.response_time = 0
                     self.zeytin_status = False
-                    self.timestamp = datetime.utcnow()
+                    self.timestamp = datetime.now(timezone.utc)
                     self.status_code = 0
+                    self.ssl_days = 0
             
             last_log = FakeLog()
             
@@ -195,31 +201,15 @@ async def read_root(request: Request, db: Session = Depends(get_db), user: str =
             "data": last_log,
             "history": history,
             "stats": stats,
-            "user": user  # Kullanıcı bilgisini template'e gönder
+            "user": user 
         })
         
     except Exception as e:
         print(f"Dashboard error: {e}")
-        # Hata durumunda minimal veri
-        class FakeLog:
-            def __init__(self):
-                self.is_online = False
-                self.response_time = 0
-                self.zeytin_status = False
-                self.timestamp = datetime.utcnow()
-                self.status_code = 0
-        
         return templates.TemplateResponse("index.html", {
             "request": request,
-            "data": FakeLog(),
+            "data": None,
             "history": [],
-            "stats": {
-                'avg_24h': 0.0,
-                'avg_1h': 0.0,
-                'uptime_percentage': 0.0,
-                'zeytin_uptime': 0.0,
-                'total_checks_24h': 0,
-                'hourly_data': []
-            },
+            "stats": None,
             "user": user
         })

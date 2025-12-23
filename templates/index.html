@@ -29,12 +29,42 @@
         .logo:hover {
             transform: scale(1.05);
         }
+        
+        /* Mobil iyileştirmeleri */
         @media (max-width: 768px) {
             .logo {
                 height: 2rem;
             }
             .header-title {
-                font-size: 1.875rem;
+                font-size: 1.5rem !important;
+            }
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .card {
+                padding: 1rem;
+            }
+            .table-responsive {
+                font-size: 0.75rem;
+            }
+            .mobile-hidden {
+                display: none;
+            }
+            .mobile-compact {
+                padding: 0.5rem;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .header-title {
+                font-size: 1.25rem !important;
+            }
+            .grid-mobile-1 {
+                grid-template-columns: repeat(1, minmax(0, 1fr));
+            }
+            .grid-mobile-2 {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
     </style>
@@ -42,27 +72,25 @@
 <body class="bg-slate-900 text-white min-h-screen">
     <!-- Header -->
     <header class="gradient-bg shadow-2xl">
-        <div class="container mx-auto px-6 py-8">
-            <div class="flex items-center justify-between flex-wrap">
-                <div class="flex items-center space-x-4">
-                    <!-- 7Bulut Logosu -->
+        <div class="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center space-x-2 sm:space-x-4">
                     <img src="/static/images/7bulutlogo-1.webp" 
                          alt="7Bulut Logo" 
-                         class="logo h-12 w-auto md:h-14 lg:h-16">
+                         class="logo h-8 sm:h-12 md:h-14 lg:h-16 w-auto">
                     <div>
-                        <h1 class="header-title text-2xl md:text-3xl lg:text-4xl font-bold text-white">
-                            <i class="fas fa-shield-alt mr-2 md:mr-3"></i>
-                            <span class="hidden sm:inline">7Bulut</span> Sentinel
+                        <h1 class="header-title text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white">
+                            <span class="hidden xs:inline">7Bulut</span> Sentinel
                         </h1>
-                        <p class="text-blue-100 mt-1 md:mt-2 text-sm md:text-base">
+                        <p class="text-blue-100 mt-1 text-xs sm:text-sm md:text-base">
                             Real-time Website Monitoring Dashboard
                         </p>
                     </div>
                 </div>
-                <div class="text-right mt-4 md:mt-0">
+                <div class="text-right">
                     <div class="text-blue-100 text-xs">Kullanıcı: {{ user }}</div>
-                    <div class="text-blue-100 text-xs md:text-sm">Son Güncelleme</div>
-                    <div class="text-white font-semibold text-sm md:text-base" id="lastUpdate">
+                    <div class="text-blue-100 text-xs sm:text-sm">Son Güncelleme</div>
+                    <div class="text-white font-semibold text-xs sm:text-sm md:text-base" id="lastUpdate">
                         {% if data.timestamp %}
                             {{ data.timestamp.strftime('%H:%M:%S') }}
                         {% else %}
@@ -74,24 +102,24 @@
         </div>
     </header>
 
-    <div class="container mx-auto px-6 py-8">
+    <div class="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <!-- Ana Metrikler -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <div class="grid grid-mobile-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6 mb-6 sm:mb-8">
             <!-- Site Durumu -->
-            <div class="card p-6 rounded-xl text-center relative overflow-hidden">
-                <div class="absolute top-2 right-2">
+            <div class="card p-3 sm:p-6 rounded-xl text-center relative overflow-hidden">
+                <div class="absolute top-1 right-1 sm:top-2 sm:right-2">
                     {% if data.is_online %}
-                        <div class="w-3 h-3 bg-green-400 rounded-full pulse-dot"></div>
+                        <div class="w-2 h-2 sm:w-3 sm:h-3 bg-green-400 rounded-full pulse-dot"></div>
                     {% else %}
-                        <div class="w-3 h-3 bg-red-400 rounded-full pulse-dot"></div>
+                        <div class="w-2 h-2 sm:w-3 sm:h-3 bg-red-400 rounded-full pulse-dot"></div>
                     {% endif %}
                 </div>
-                <i class="fas fa-globe text-3xl mb-3 {{ 'text-green-400' if data.is_online else 'text-red-400' }}"></i>
-                <p class="text-gray-400 text-sm mb-2">Site Durumu</p>
-                <h2 class="text-2xl font-bold {{ 'text-green-400' if data.is_online else 'text-red-400' }}">
+                <i class="fas fa-globe text-xl sm:text-3xl mb-2 sm:mb-3 {{ 'text-green-400' if data.is_online else 'text-red-400' }}"></i>
+                <p class="text-gray-400 text-xs sm:text-sm mb-1 sm:mb-2">Site Durumu</p>
+                <h2 class="text-lg sm:text-2xl font-bold {{ 'text-green-400' if data.is_online else 'text-red-400' }}">
                     {{ 'ONLINE' if data.is_online else 'OFFLINE' }}
                 </h2>
-                <p class="text-xs text-gray-500 mt-2">
+                <p class="text-xs text-gray-500 mt-1 sm:mt-2">
                     Uptime: 
                     {% if stats and stats.uptime_percentage %}
                         {{ stats.uptime_percentage }}%
@@ -102,21 +130,21 @@
             </div>
 
             <!-- Yanıt Süresi -->
-            <div class="card p-6 rounded-xl text-center">
-                <i class="fas fa-tachometer-alt text-3xl text-blue-400 mb-3"></i>
-                <p class="text-gray-400 text-sm mb-2">Mevcut Yanıt Süresi</p>
-                <h2 class="text-2xl font-bold text-blue-400">{{ data.response_time or 0 }} ms</h2>
-                <div class="mt-2 text-xs">
+            <div class="card p-3 sm:p-6 rounded-xl text-center">
+                <i class="fas fa-tachometer-alt text-xl sm:text-3xl text-blue-400 mb-2 sm:mb-3"></i>
+                <p class="text-gray-400 text-xs sm:text-sm mb-1 sm:mb-2">Yanıt Süresi</p>
+                <h2 class="text-lg sm:text-2xl font-bold text-blue-400">{{ data.response_time or 0 }} ms</h2>
+                <div class="mt-1 sm:mt-2 text-xs">
                     <div class="text-gray-500">
-                        1h ort: 
+                        1h: 
                         {% if stats and stats.avg_1h %}
                             {{ stats.avg_1h }}
                         {% else %}
                             0
                         {% endif %} ms
                     </div>
-                    <div class="text-gray-500">
-                        24h ort: 
+                    <div class="text-gray-500 mobile-hidden">
+                        24h: 
                         {% if stats and stats.avg_24h %}
                             {{ stats.avg_24h }}
                         {% else %}
@@ -127,13 +155,13 @@
             </div>
 
             <!-- Zeytin AI -->
-            <div class="card p-6 rounded-xl text-center">
-                <i class="fas fa-robot text-3xl {{ 'text-purple-400' if data.zeytin_status else 'text-red-400' }} mb-3"></i>
-                <p class="text-gray-400 text-sm mb-2">Zeytin AI Bot</p>
-                <h2 class="text-2xl font-bold {{ 'text-purple-400' if data.zeytin_status else 'text-red-400' }}">
+            <div class="card p-3 sm:p-6 rounded-xl text-center">
+                <i class="fas fa-robot text-xl sm:text-3xl {{ 'text-purple-400' if data.zeytin_status else 'text-red-400' }} mb-2 sm:mb-3"></i>
+                <p class="text-gray-400 text-xs sm:text-sm mb-1 sm:mb-2">Zeytin AI</p>
+                <h2 class="text-sm sm:text-2xl font-bold {{ 'text-purple-400' if data.zeytin_status else 'text-red-400' }}">
                     {{ 'AKTİF' if data.zeytin_status else 'DEVRE DIŞI' }}
                 </h2>
-                <p class="text-xs text-gray-500 mt-2">
+                <p class="text-xs text-gray-500 mt-1 sm:mt-2">
                     Uptime: 
                     {% if stats and stats.zeytin_uptime %}
                         {{ stats.zeytin_uptime }}%
@@ -144,113 +172,115 @@
             </div>
 
             <!-- SSL Sertifika -->
-            <div class="card p-6 rounded-xl text-center">
-                <i class="fas fa-lock text-3xl mb-3 {{ 'text-green-400' if data.ssl_days and data.ssl_days > 30 else ('text-yellow-400' if data.ssl_days and data.ssl_days > 7 else 'text-red-400') }}"></i>
-                <p class="text-gray-400 text-sm mb-2">SSL Sertifika</p>
+            <div class="card p-3 sm:p-6 rounded-xl text-center">
+                <i class="fas fa-lock text-xl sm:text-3xl mb-2 sm:mb-3 {{ 'text-green-400' if data.ssl_days and data.ssl_days > 30 else ('text-yellow-400' if data.ssl_days and data.ssl_days > 7 else 'text-red-400') }}"></i>
+                <p class="text-gray-400 text-xs sm:text-sm mb-1 sm:mb-2">SSL</p>
                 {% if data.ssl_days is not none %}
-                    <h2 class="text-2xl font-bold {{ 'text-green-400' if data.ssl_days > 30 else ('text-yellow-400' if data.ssl_days > 7 else 'text-red-400') }}">
+                    <h2 class="text-lg sm:text-2xl font-bold {{ 'text-green-400' if data.ssl_days > 30 else ('text-yellow-400' if data.ssl_days > 7 else 'text-red-400') }}">
                         {{ data.ssl_days }} gün
                     </h2>
-                    <p class="text-xs text-gray-500 mt-2">
+                    <p class="text-xs text-gray-500 mt-1 sm:mt-2">
                         {% if data.ssl_days > 30 %}
                             Güvenli
                         {% elif data.ssl_days > 7 %}
                             Dikkat
                         {% else %}
-                            Acil Yenile
+                            Acil
                         {% endif %}
                     </p>
                 {% else %}
-                    <h2 class="text-2xl font-bold text-gray-400">N/A</h2>
-                    <p class="text-xs text-gray-500 mt-2">Kontrol Edilemiyor</p>
+                    <h2 class="text-lg sm:text-2xl font-bold text-gray-400">N/A</h2>
+                    <p class="text-xs text-gray-500 mt-1 sm:mt-2">Kontrol Edilemiyor</p>
                 {% endif %}
             </div>
 
             <!-- Toplam Kontrol -->
-            <div class="card p-6 rounded-xl text-center">
-                <i class="fas fa-chart-line text-3xl text-yellow-400 mb-3"></i>
-                <p class="text-gray-400 text-sm mb-2">24h Toplam Kontrol</p>
-                <h2 class="text-2xl font-bold text-yellow-400">
+            <div class="card p-3 sm:p-6 rounded-xl text-center col-span-2 sm:col-span-1">
+                <i class="fas fa-chart-line text-xl sm:text-3xl text-yellow-400 mb-2 sm:mb-3"></i>
+                <p class="text-gray-400 text-xs sm:text-sm mb-1 sm:mb-2">24h Kontrol</p>
+                <h2 class="text-lg sm:text-2xl font-bold text-yellow-400">
                     {% if stats and stats.total_checks_24h %}
                         {{ stats.total_checks_24h }}
                     {% else %}
                         0
                     {% endif %}
                 </h2>
-                <p class="text-xs text-gray-500 mt-2">
+                <p class="text-xs text-gray-500 mt-1 sm:mt-2">
                     {% if stats and stats.total_checks_24h and stats.total_checks_24h > 0 %}
-                        ~{{ (stats.total_checks_24h / 24) | round }} kontrol/saat
+                        ~{{ (stats.total_checks_24h / 24) | round }}/saat
                     {% else %}
-                        ~0 kontrol/saat
+                        ~0/saat
                     {% endif %}
                 </p>
             </div>
         </div>
 
         <!-- Grafikler -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <!-- Yanıt Süresi Grafiği -->
-            <div class="card p-6 rounded-xl">
-                <h3 class="text-xl font-semibold mb-4 text-gray-300 flex items-center">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8">
+            <div class="card p-4 sm:p-6 rounded-xl flex flex-col">
+                <h3 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-300 flex items-center">
                     <i class="fas fa-chart-area mr-2 text-blue-400"></i>
-                    Saatlik Ortalama Yanıt Süresi
+                    <span class="hidden sm:inline">Saatlik Ortalama </span>Yanıt Süresi
                 </h3>
-                <canvas id="responseChart" width="400" height="200"></canvas>
+                <div class="relative h-64 w-full">
+                    <canvas id="responseChart"></canvas>
+                </div>
             </div>
 
-            <!-- Durum Dağılımı -->
-            <div class="card p-6 rounded-xl">
-                <h3 class="text-xl font-semibold mb-4 text-gray-300 flex items-center">
+            <div class="card p-4 sm:p-6 rounded-xl flex flex-col">
+                <h3 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-300 flex items-center">
                     <i class="fas fa-chart-pie mr-2 text-green-400"></i>
-                    24 Saat Durum Dağılımı
+                    <span class="hidden sm:inline">24 Saat </span>Durum Dağılımı
                 </h3>
-                <canvas id="statusChart" width="400" height="200"></canvas>
+                <div class="relative h-64 w-full">
+                    <canvas id="statusChart"></canvas>
+                </div>
             </div>
         </div>
 
         <!-- Son Kontroller Tablosu -->
         <div class="card rounded-xl overflow-hidden">
-            <div class="bg-slate-800 px-6 py-4 border-b border-slate-700">
-                <h3 class="text-xl font-semibold text-gray-300 flex items-center">
+            <div class="bg-slate-800 px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-700">
+                <h3 class="text-lg sm:text-xl font-semibold text-gray-300 flex items-center">
                     <i class="fas fa-history mr-2 text-indigo-400"></i>
                     Son Kontroller
                 </h3>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
+            <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                <table class="w-full text-left text-xs sm:text-sm table-responsive">
                     <thead class="bg-slate-800 text-gray-400 uppercase text-xs">
                         <tr>
-                            <th class="px-6 py-3">Zaman</th>
-                            <th class="px-6 py-3">Durum</th>
-                            <th class="px-6 py-3">Yanıt Süresi</th>
-                            <th class="px-6 py-3">Zeytin AI</th>
-                            <th class="px-6 py-3">SSL</th>
-                            <th class="px-6 py-3">Performans</th>
+                            <th class="px-2 sm:px-6 py-2 sm:py-3">Zaman</th>
+                            <th class="px-2 sm:px-6 py-2 sm:py-3">Durum</th>
+                            <th class="px-2 sm:px-6 py-2 sm:py-3">Yanıt</th>
+                            <th class="px-2 sm:px-6 py-2 sm:py-3 mobile-hidden">Zeytin</th>
+                            <th class="px-2 sm:px-6 py-2 sm:py-3">SSL</th>
+                            <th class="px-2 sm:px-6 py-2 sm:py-3 mobile-hidden">Performans</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-700">
                         {% for log in history %}
                         <tr class="hover:bg-slate-800/50 transition">
-                            <td class="px-6 py-4 font-mono">{{ log.timestamp.strftime('%H:%M:%S') }}</td>
-                            <td class="px-6 py-4">
-                                <span class="px-3 py-1 rounded-full text-xs font-medium {{ 'bg-green-900 text-green-300' if log.is_online else 'bg-red-900 text-red-300' }}">
+                            <td class="px-2 sm:px-6 py-2 sm:py-4 font-mono text-xs">{{ log.timestamp.strftime('%H:%M:%S') }}</td>
+                            <td class="px-2 sm:px-6 py-2 sm:py-4">
+                                <span class="px-2 sm:px-3 py-1 rounded-full text-xs font-medium {{ 'bg-green-900 text-green-300' if log.is_online else 'bg-red-900 text-red-300' }}">
                                     {{ log.status_code }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">
-                                <span class="text-blue-300 font-semibold">{{ log.response_time }} ms</span>
+                            <td class="px-2 sm:px-6 py-2 sm:py-4">
+                                <span class="text-blue-300 font-semibold text-xs">{{ log.response_time }}ms</span>
                                 {% if log.response_time > 500 %}
-                                    <i class="fas fa-exclamation-triangle text-red-400 ml-2"></i>
+                                    <i class="fas fa-exclamation-triangle text-red-400 ml-1 hidden sm:inline"></i>
                                 {% elif log.response_time > 300 %}
-                                    <i class="fas fa-exclamation-circle text-yellow-400 ml-2"></i>
+                                    <i class="fas fa-exclamation-circle text-yellow-400 ml-1 hidden sm:inline"></i>
                                 {% else %}
-                                    <i class="fas fa-check-circle text-green-400 ml-2"></i>
+                                    <i class="fas fa-check-circle text-green-400 ml-1 hidden sm:inline"></i>
                                 {% endif %}
                             </td>
-                            <td class="px-6 py-4 text-lg">
+                            <td class="px-2 sm:px-6 py-2 sm:py-4 text-sm mobile-hidden">
                                 {{ '🤖' if log.zeytin_status else '❌' }}
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-2 sm:px-6 py-2 sm:py-4">
                                 {% if log.ssl_days is not none %}
                                     <span class="text-xs font-medium {{ 'text-green-400' if log.ssl_days > 30 else ('text-yellow-400' if log.ssl_days > 7 else 'text-red-400') }}">
                                         {{ log.ssl_days }}d
@@ -259,7 +289,7 @@
                                     <span class="text-gray-400 text-xs">N/A</span>
                                 {% endif %}
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-2 sm:px-6 py-2 sm:py-4 mobile-hidden">
                                 {% if log.response_time < 200 %}
                                     <span class="text-green-400 text-xs">Mükemmel</span>
                                 {% elif log.response_time < 350 %}
@@ -279,9 +309,9 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-slate-800 mt-12 py-6">
-        <div class="container mx-auto px-6 text-center text-gray-400">
-            <p>&copy; 2024 7Bulut Sentinel - Powered by FastAPI & Love ❤️</p>
+    <footer class="bg-slate-800 mt-8 sm:mt-12 py-4 sm:py-6">
+        <div class="container mx-auto px-4 sm:px-6 text-center text-gray-400">
+            <p class="text-sm sm:text-base">&copy; 2025 7BULUT. Tüm hakları saklıdır.</p>
         </div>
     </footer>
 
@@ -316,10 +346,29 @@
                     },
                     options: {
                         responsive: true,
-                        plugins: { legend: { labels: { color: 'white' } } },
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { 
+                                labels: { color: 'white' },
+                                display: window.innerWidth > 640
+                            }
+                        },
                         scales: {
-                            y: { beginAtZero: true, ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } },
-                            x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                            y: { 
+                                beginAtZero: true, 
+                                ticks: { 
+                                    color: 'white',
+                                    font: { size: window.innerWidth > 640 ? 12 : 10 }
+                                }, 
+                                grid: { color: 'rgba(255,255,255,0.1)' } 
+                            },
+                            x: { 
+                                ticks: { 
+                                    color: 'white',
+                                    font: { size: window.innerWidth > 640 ? 12 : 10 }
+                                }, 
+                                grid: { color: 'rgba(255,255,255,0.1)' } 
+                            }
                         }
                     }
                 });
@@ -340,7 +389,16 @@
                     },
                     options: {
                         responsive: true,
-                        plugins: { legend: { labels: { color: 'white' } } }
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { 
+                                labels: { 
+                                    color: 'white',
+                                    font: { size: window.innerWidth > 640 ? 12 : 10 }
+                                },
+                                position: window.innerWidth > 640 ? 'top' : 'bottom'
+                            }
+                        }
                     }
                 });
             }
