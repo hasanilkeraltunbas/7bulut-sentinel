@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7Bulut Sentinel - Monitoring Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e40af 50%, #3b82f6 100%);
+        }
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .logo {
+            transition: transform 0.3s ease;
+        }
+        .logo:hover {
+            transform: scale(1.05);
+        }
+        @media (max-width: 768px) {
+            .logo {
+                height: 2rem;
+            }
+            .header-title {
+                font-size: 1.875rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg shadow-2xl">
+        <div class="container mx-auto px-6 py-8">
+            <div class="flex items-center justify-between flex-wrap">
+                <div class="flex items-center space-x-4">
+                    <!-- 7Bulut Logosu -->
+                    <img src="/static/images/7bulutlogo-1.webp" 
+                         alt="7Bulut Logo" 
+                         class="logo h-12 w-auto md:h-14 lg:h-16">
+                    <div>
+                        <h1 class="header-title text-2xl md:text-3xl lg:text-4xl font-bold text-white">
+                            <i class="fas fa-shield-alt mr-2 md:mr-3"></i>
+                            <span class="hidden sm:inline">7Bulut</span> Sentinel
+                        </h1>
+                        <p class="text-blue-100 mt-1 md:mt-2 text-sm md:text-base">
+                            Real-time Website Monitoring Dashboard
+                        </p>
+                    </div>
+                </div>
+                <div class="text-right mt-4 md:mt-0">
+                    <div class="text-blue-100 text-xs md:text-sm">Son Güncelleme</div>
+                    <div class="text-white font-semibold text-sm md:text-base" id="lastUpdate">
+                        {% if data.timestamp %}
+                            {{ data.timestamp.strftime('%H:%M:%S') }}
+                        {% else %}
+                            Henüz veri yok
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6 py-8">
+        <!-- Ana Metrikler -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Site Durumu -->
+            <div class="card p-6 rounded-xl text-center relative overflow-hidden">
+                <div class="absolute top-2 right-2">
+                    {% if data.is_online %}
+                        <div class="w-3 h-3 bg-green-400 rounded-full pulse-dot"></div>
+                    {% else %}
+                        <div class="w-3 h-3 bg-red-400 rounded-full pulse-dot"></div>
+                    {% endif %}
+                </div>
+                <i class="fas fa-globe text-3xl mb-3 {{ 'text-green-400' if data.is_online else 'text-red-400' }}"></i>
+                <p class="text-gray-400 text-sm mb-2">Site Durumu</p>
+                <h2 class="text-2xl font-bold {{ 'text-green-400' if data.is_online else 'text-red-400' }}">
+                    {{ 'ONLINE' if data.is_online else 'OFFLINE' }}
+                </h2>
+                <p class="text-xs text-gray-500 mt-2">
+                    Uptime: 
+                    {% if stats and stats.uptime_percentage %}
+                        {{ stats.uptime_percentage }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </p>
+            </div>
+
+            <!-- Yanıt Süresi -->
+            <div class="card p-6 rounded-xl text-center">
+                <i class="fas fa-tachometer-alt text-3xl text-blue-400 mb-3"></i>
+                <p class="text-gray-400 text-sm mb-2">Mevcut Yanıt Süresi</p>
+                <h2 class="text-2xl font-bold text-blue-400">{{ data.response_time or 0 }} ms</h2>
+                <div class="mt-2 text-xs">
+                    <div class="text-gray-500">
+                        1h ort: 
+                        {% if stats and stats.avg_1h %}
+                            {{ stats.avg_1h }}
+                        {% else %}
+                            0
+                        {% endif %} ms
+                    </div>
+                    <div class="text-gray-500">
+                        24h ort: 
+                        {% if stats and stats.avg_24h %}
+                            {{ stats.avg_24h }}
+                        {% else %}
+                            0
+                        {% endif %} ms
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zeytin AI -->
+            <div class="card p-6 rounded-xl text-center">
+                <i class="fas fa-robot text-3xl {{ 'text-purple-400' if data.zeytin_status else 'text-red-400' }} mb-3"></i>
+                <p class="text-gray-400 text-sm mb-2">Zeytin AI Bot</p>
+                <h2 class="text-2xl font-bold {{ 'text-purple-400' if data.zeytin_status else 'text-red-400' }}">
+                    {{ 'AKTİF' if data.zeytin_status else 'DEVRE DIŞI' }}
+                </h2>
+                <p class="text-xs text-gray-500 mt-2">
+                    Uptime: 
+                    {% if stats and stats.zeytin_uptime %}
+                        {{ stats.zeytin_uptime }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </p>
+            </div>
+
+            <!-- Toplam Kontrol -->
+            <div class="card p-6 rounded-xl text-center">
+                <i class="fas fa-chart-line text-3xl text-yellow-400 mb-3"></i>
+                <p class="text-gray-400 text-sm mb-2">24h Toplam Kontrol</p>
+                <h2 class="text-2xl font-bold text-yellow-400">
+                    {% if stats and stats.total_checks_24h %}
+                        {{ stats.total_checks_24h }}
+                    {% else %}
+                        0
+                    {% endif %}
+                </h2>
+                <p class="text-xs text-gray-500 mt-2">
+                    {% if stats and stats.total_checks_24h and stats.total_checks_24h > 0 %}
+                        ~{{ (stats.total_checks_24h / 24) | round }} kontrol/saat
+                    {% else %}
+                        ~0 kontrol/saat
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Grafikler -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Yanıt Süresi Grafiği -->
+            <div class="card p-6 rounded-xl">
+                <h3 class="text-xl font-semibold mb-4 text-gray-300 flex items-center">
+                    <i class="fas fa-chart-area mr-2 text-blue-400"></i>
+                    Saatlik Ortalama Yanıt Süresi
+                </h3>
+                <canvas id="responseChart" width="400" height="200"></canvas>
+            </div>
+
+            <!-- Durum Dağılımı -->
+            <div class="card p-6 rounded-xl">
+                <h3 class="text-xl font-semibold mb-4 text-gray-300 flex items-center">
+                    <i class="fas fa-chart-pie mr-2 text-green-400"></i>
+                    24 Saat Durum Dağılımı
+                </h3>
+                <canvas id="statusChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Son Kontroller Tablosu -->
+        <div class="card rounded-xl overflow-hidden">
+            <div class="bg-slate-800 px-6 py-4 border-b border-slate-700">
+                <h3 class="text-xl font-semibold text-gray-300 flex items-center">
+                    <i class="fas fa-history mr-2 text-indigo-400"></i>
+                    Son Kontroller
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-800 text-gray-400 uppercase text-xs">
+                        <tr>
+                            <th class="px-6 py-3">Zaman</th>
+                            <th class="px-6 py-3">Durum</th>
+                            <th class="px-6 py-3">Yanıt Süresi</th>
+                            <th class="px-6 py-3">Zeytin AI</th>
+                            <th class="px-6 py-3">Performans</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700">
+                        {% for log in history %}
+                        <tr class="hover:bg-slate-800/50 transition">
+                            <td class="px-6 py-4 font-mono">{{ log.timestamp.strftime('%H:%M:%S') }}</td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 rounded-full text-xs font-medium {{ 'bg-green-900 text-green-300' if log.is_online else 'bg-red-900 text-red-300' }}">
+                                    {{ log.status_code }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-blue-300 font-semibold">{{ log.response_time }} ms</span>
+                                {% if log.response_time > 500 %}
+                                    <i class="fas fa-exclamation-triangle text-red-400 ml-2"></i>
+                                {% elif log.response_time > 300 %}
+                                    <i class="fas fa-exclamation-circle text-yellow-400 ml-2"></i>
+                                {% else %}
+                                    <i class="fas fa-check-circle text-green-400 ml-2"></i>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-lg">
+                                {{ '🤖' if log.zeytin_status else '❌' }}
+                            </td>
+                            <td class="px-6 py-4">
+                                {% if log.response_time < 200 %}
+                                    <span class="text-green-400 text-xs">Mükemmel</span>
+                                {% elif log.response_time < 350 %}
+                                    <span class="text-blue-400 text-xs">İyi</span>
+                                {% elif log.response_time < 500 %}
+                                    <span class="text-yellow-400 text-xs">Orta</span>
+                                {% else %}
+                                    <span class="text-red-400 text-xs">Yavaş</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 mt-12 py-6">
+        <div class="container mx-auto px-6 text-center text-gray-400">
+            <p>&copy; 2024 7Bulut Sentinel - Powered by FastAPI & Love ❤️</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Verileri HTML elementlerinden gizli bir şekilde alalım (Editör dostu yöntem)
+        const statsRaw = '{{ stats | tojson | safe }}'; 
+        
+        try {
+            const statsData = JSON.parse(statsRaw);
+            const hourlyData = statsData?.hourly_data || [];
+            const uptimePercentage = statsData?.uptime_percentage || 0;
+            
+            const chartLabels = hourlyData.map(item => item?.hour || '00:00');
+            const chartData = hourlyData.map(item => item?.avg_response || 0);
+            
+            // Yanıt Süresi Grafiği
+            const responseCtx = document.getElementById('responseChart');
+            if (responseCtx) {
+                new Chart(responseCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [{
+                            label: 'Ortalama Yanıt Süresi (ms)',
+                            data: chartData,
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { labels: { color: 'white' } } },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                            x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                        }
+                    }
+                });
+            }
+    
+            // Durum Dağılımı Grafiği
+            const statusCtx = document.getElementById('statusChart');
+            if (statusCtx) {
+                new Chart(statusCtx.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Online', 'Offline'],
+                        datasets: [{
+                            data: [uptimePercentage, 100 - uptimePercentage],
+                            backgroundColor: ['#10b981', '#ef4444'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { labels: { color: 'white' } } }
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Veri işleme hatası:', error);
+        }
+    
+        // Sayfa Yenileme
+        setInterval(() => { location.reload(); }, 30000);
+    </script>
+</body>
+</html>
